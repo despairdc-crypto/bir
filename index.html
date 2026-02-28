@@ -17,7 +17,7 @@ body{
   text-align:center;
 }
 
-/* 星空 + 星座 + 流星 */
+/* 星空 + 流星 */
 canvas{
   position:fixed;
   top:0;
@@ -128,6 +128,14 @@ button:active{
   z-index:12;
   text-shadow:0 0 12px #fff,0 0 24px #ff4081;
 }
+
+/* 移动端提示 */
+#mobile-tip{
+  display:none;
+  color:#ff4081;
+  margin-top:10px;
+  font-size:18px;
+}
 </style>
 </head>
 <body>
@@ -140,8 +148,9 @@ button:active{
   <div id="candle">🕯️<div class="flame" id="flame"></div></div>
   <h1>元子生日快乐</h1>
   <div class="subtitle">小心！有人准备一展烂歌喉</div>
-  <button onclick="start()">点一下</button>
+  <button id="play-btn">点一下播放音乐 🎵</button>
   <div id="message"></div>
+  <div id="mobile-tip">请点击按钮播放音乐 🎵</div>
 </div>
 
 <div id="letter">
@@ -158,10 +167,8 @@ button:active{
 
 <div id="fireworks-text">生日快乐 元子</div>
 
-<!-- 优化音频：playsinline 和 preload 提升移动端兼容性 -->
-<audio id="song" preload="auto" playsinline>
+<audio id="song" preload="auto">
   <source src="song.mp3" type="audio/mpeg">
-  您的浏览器不支持 audio 元素。
 </audio>
 
 <script>
@@ -207,7 +214,6 @@ setInterval(launchMeteor,2000);
 const canvas=document.getElementById("fireworks"), c=canvas.getContext("2d");
 canvas.width=window.innerWidth; canvas.height=window.innerHeight;
 let particles=[];
-
 function explode(x,y,color){
   for(let i=0;i<100;i++){
     particles.push({x:x,y:y,vx:(Math.random()-0.5)*6,vy:(Math.random()-0.5)*6,life:100,color:color});
@@ -237,29 +243,18 @@ function showFireworksText(){
 }
 
 // ===== 主流程 =====
-function start(){
-  // 隐藏按钮
-  document.querySelector("button").style.display="none";
-
-  // 播放音频，并捕获可能的错误（移动端常见）
-  const song = document.getElementById('song');
-  song.play().then(() => {
-    console.log('音频播放成功');
-  }).catch(e => {
-    console.error('音频播放失败:', e);
-    // 可选：在页面上显示提示（仅调试用，可删除）
-    document.getElementById('message').innerText = '音频加载失败，请检查网络或文件路径。';
-  });
-
-  // 开始打字动画
+const playBtn=document.getElementById("play-btn");
+playBtn.addEventListener("click",()=>{
+  playBtn.style.display="none";
+  document.getElementById("mobile-tip").style.display="none";
+  const audio=document.getElementById("song");
+  audio.play().catch(()=>{alert("请允许播放音频")});
   typeText();
-  // 定期发射烟花
   setInterval(()=>{explode(Math.random()*canvas.width,Math.random()*canvas.height/2,`hsl(${Math.random()*360},100%,70%)`)},800);
-  // 4秒后显示烟花文字
   setTimeout(showFireworksText,4000);
-}
+});
 
-// 打字
+// 打字动画
 let text="❤️愿卿此日生双翼\n质本洁来还洁去\n自由勇敢\n幸福做自己\n\n请吹灭蜡烛 🎂";
 let i=0;
 function typeText(){
@@ -282,17 +277,11 @@ function startMic(){
     function detect(){
       analyser.getByteFrequencyData(data);
       let volume=data.reduce((a,b)=>a+b)/data.length;
-      if(volume>60){
-        blowCandle();
-      }
+      if(volume>60){ blowCandle(); }
       requestAnimationFrame(detect);
     }
     detect();
-  })
-  .catch(err => {
-    console.error('麦克风权限被拒绝或不可用:', err);
-    // 如果用户拒绝麦克风，可以手动触发吹蜡烛（例如点击按钮），但这里保持原样
-  });
+  }).catch(()=>{console.log("麦克风权限未允许");});
 }
 
 // 吹灭蜡烛
@@ -306,7 +295,6 @@ function blowCandle(){
 function showLetter(){
   setTimeout(()=>{document.getElementById("letter").style.bottom="50px";},1500);
 }
-
 </script>
 </body>
 </html>
