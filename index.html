@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>生日快乐 元子</title>
+
+<link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+
+<style>
+body{
+  margin:0;
+  overflow:hidden;
+  font-family:'ZCOOL KuaiLe', cursive;
+  background:black;
+  color:white;
+  text-align:center;
+}
+
+/* 星空 + 星座 + 流星 */
+canvas{
+  position:fixed;
+  top:0;
+  left:0;
+}
+
+/* 主内容 */
+.container{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  z-index:10;
+}
+
+/* 蛋糕 */
+#cake{
+  font-size:90px;
+  margin-bottom:10px;
+  animation:float 3s infinite ease-in-out;
+}
+@keyframes float{
+  0%{transform:translateY(0)}
+  50%{transform:translateY(-15px)}
+  100%{transform:translateY(0)}
+}
+
+/* 蜡烛火焰 */
+#candle{
+  position:relative;
+  font-size:40px;
+  margin-bottom:20px;
+}
+.flame{
+  width:14px;
+  height:26px;
+  background:radial-gradient(circle,#ffd54f,#ff6f00);
+  border-radius:50%;
+  position:absolute;
+  left:50%;
+  top:-28px;
+  transform:translateX(-50%);
+  animation:flicker .15s infinite;
+}
+@keyframes flicker{
+  0%{transform:translateX(-50%) scale(1)}
+  50%{transform:translateX(-50%) scale(1.2)}
+  100%{transform:translateX(-50%) scale(1)}
+}
+
+h1{
+  font-size:36px;
+  margin-bottom:10px;
+}
+.subtitle{
+  opacity:0.9;
+  margin-bottom:20px;
+}
+
+button{
+  padding:16px 32px;
+  font-size:20px;
+  border:none;
+  border-radius:40px;
+  background:white;
+  color:#ff4d6d;
+  box-shadow:0 8px 25px rgba(0,0,0,0.25);
+}
+button:active{
+  transform:scale(0.9);
+}
+
+#message{
+  margin-top:20px;
+  font-size:22px;
+  line-height:1.7;
+  min-height:120px;
+  white-space:pre-line;
+}
+
+/* 信封 */
+#letter{
+  position:absolute;
+  bottom:-100%;
+  width:85%;
+  background:white;
+  color:#333;
+  border-radius:20px;
+  padding:25px;
+  font-size:18px;
+  line-height:1.7;
+  transition:1.2s;
+}
+
+/* 烟花文字 */
+#fireworks-text{
+  position:absolute;
+  top:30%;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:48px;
+  font-family:'ZCOOL KuaiLe', cursive;
+  color:#ff4081;
+  opacity:0;
+  z-index:12;
+  text-shadow:0 0 12px #fff,0 0 24px #ff4081;
+}
+</style>
+</head>
+<body>
+
+<canvas id="sky"></canvas>
+<canvas id="fireworks"></canvas>
+
+<div class="container" id="main">
+  <div id="cake">🎂</div>
+  <div id="candle">🕯️<div class="flame" id="flame"></div></div>
+  <h1>元子生日快乐</h1>
+  <div class="subtitle">小心！有人准备一展烂歌喉</div>
+  <button onclick="start()">点一下</button>
+  <div id="message"></div>
+</div>
+
+<div id="letter">
+生日快乐。  
+
+愿你这一年  
+以及永永远远  
+幸福快乐  
+
+乐莫乐兮心相知  
+
+❤️
+</div>
+
+<div id="fireworks-text">生日快乐 元子</div>
+
+<!-- 优化音频：playsinline 和 preload 提升移动端兼容性 -->
+<audio id="song" preload="auto" playsinline>
+  <source src="song.mp3" type="audio/mpeg">
+  您的浏览器不支持 audio 元素。
+</audio>
+
+<script>
+// ===== 星空粒子 + 流星 =====
+const sky=document.getElementById("sky"), ctx=sky.getContext("2d");
+sky.width=window.innerWidth; sky.height=window.innerHeight;
+let stars=[], meteors=[];
+for(let i=0;i<200;i++){stars.push({x:Math.random()*sky.width, y:Math.random()*sky.height, r:Math.random()*1.5, a:Math.random()});}
+function drawStars(){
+  ctx.clearRect(0,0,sky.width,sky.height);
+  stars.forEach(s=>{
+    ctx.beginPath();
+    ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx.fillStyle="rgba(255,255,255,"+s.a+")";
+    ctx.fill();
+    s.a+=Math.random()*0.05-0.02;
+    if(s.a<0)s.a=0; if(s.a>1)s.a=1;
+  });
+  meteors.forEach(m=>{
+    ctx.beginPath();
+    ctx.moveTo(m.x,m.y); ctx.lineTo(m.x+m.dx, m.y+m.dy);
+    ctx.strokeStyle="rgba(255,255,255,"+m.a+")"; ctx.lineWidth=2; ctx.stroke();
+    m.x+=m.vx; m.y+=m.vy; m.a-=0.02;
+  });
+  meteors=meteors.filter(m=>m.a>0);
+  requestAnimationFrame(drawStars);
+}
+drawStars();
+function launchMeteor(){
+  meteors.push({
+    x:Math.random()*sky.width,
+    y:0,
+    dx:Math.random()*80+50,
+    dy:Math.random()*30+10,
+    vx:4+Math.random()*2,
+    vy:2+Math.random()*1,
+    a:1
+  });
+}
+setInterval(launchMeteor,2000);
+
+// ===== 烟花 =====
+const canvas=document.getElementById("fireworks"), c=canvas.getContext("2d");
+canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+let particles=[];
+
+function explode(x,y,color){
+  for(let i=0;i<100;i++){
+    particles.push({x:x,y:y,vx:(Math.random()-0.5)*6,vy:(Math.random()-0.5)*6,life:100,color:color});
+  }
+}
+function drawFireworks(){
+  c.clearRect(0,0,canvas.width,canvas.height);
+  particles.forEach((p,i)=>{
+    c.beginPath();
+    c.arc(p.x,p.y,2,0,Math.PI*2);
+    c.fillStyle=p.color;
+    c.fill();
+    p.x+=p.vx; p.y+=p.vy; p.life--;
+  });
+  particles=particles.filter(p=>p.life>0);
+  requestAnimationFrame(drawFireworks);
+}
+drawFireworks();
+
+// ===== 烟花文字 =====
+function showFireworksText(){
+  const txt=document.getElementById("fireworks-text");
+  txt.style.opacity=1;
+  for(let i=0;i<txt.textContent.length;i++){
+    explode(canvas.width/2,canvas.height/3,`hsl(${Math.random()*360},100%,70%)`);
+  }
+}
+
+// ===== 主流程 =====
+function start(){
+  // 隐藏按钮
+  document.querySelector("button").style.display="none";
+
+  // 播放音频，并捕获可能的错误（移动端常见）
+  const song = document.getElementById('song');
+  song.play().then(() => {
+    console.log('音频播放成功');
+  }).catch(e => {
+    console.error('音频播放失败:', e);
+    // 可选：在页面上显示提示（仅调试用，可删除）
+    document.getElementById('message').innerText = '音频加载失败，请检查网络或文件路径。';
+  });
+
+  // 开始打字动画
+  typeText();
+  // 定期发射烟花
+  setInterval(()=>{explode(Math.random()*canvas.width,Math.random()*canvas.height/2,`hsl(${Math.random()*360},100%,70%)`)},800);
+  // 4秒后显示烟花文字
+  setTimeout(showFireworksText,4000);
+}
+
+// 打字
+let text="❤️愿卿此日生双翼\n质本洁来还洁去\n自由勇敢\n幸福做自己\n\n请吹灭蜡烛 🎂";
+let i=0;
+function typeText(){
+  if(i<text.length){
+    document.getElementById("message").innerHTML+=text.charAt(i);
+    i++;
+    setTimeout(typeText,80);
+  } else { startMic(); }
+}
+
+// 麦克风吹蜡烛
+function startMic(){
+  navigator.mediaDevices.getUserMedia({audio:true})
+  .then(stream=>{
+    const audioContext=new AudioContext();
+    const mic=audioContext.createMediaStreamSource(stream);
+    const analyser=audioContext.createAnalyser();
+    mic.connect(analyser);
+    let data=new Uint8Array(analyser.frequencyBinCount);
+    function detect(){
+      analyser.getByteFrequencyData(data);
+      let volume=data.reduce((a,b)=>a+b)/data.length;
+      if(volume>60){
+        blowCandle();
+      }
+      requestAnimationFrame(detect);
+    }
+    detect();
+  })
+  .catch(err => {
+    console.error('麦克风权限被拒绝或不可用:', err);
+    // 如果用户拒绝麦克风，可以手动触发吹蜡烛（例如点击按钮），但这里保持原样
+  });
+}
+
+// 吹灭蜡烛
+function blowCandle(){
+  document.getElementById("flame").style.display="none";
+  document.getElementById("message").innerHTML+="\n\n愿望会实现的 ✨";
+  showLetter();
+}
+
+// 信封出现
+function showLetter(){
+  setTimeout(()=>{document.getElementById("letter").style.bottom="50px";},1500);
+}
+
+</script>
+</body>
+</html>
