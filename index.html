@@ -2,8 +2,10 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- 手机端核心适配：禁止缩放、固定视口 -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>生日快乐 元子</title>
+
 <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
 
 <style>
@@ -14,12 +16,19 @@ body{
   background:black;
   color:white;
   text-align:center;
+  /* 禁止手机长按选中文本 */
+  -webkit-user-select: none;
+  user-select: none;
 }
 
-/* 星空 + 流星 */
-canvas{ position:fixed; top:0; left:0; }
+/* 星空 + 星座 + 流星 - 手机优化 */
+canvas{
+  position:fixed;
+  top:0;
+  left:0;
+}
 
-/* 主内容 */
+/* 主内容 - 手机居中优化 */
 .container{
   position:absolute;
   top:50%;
@@ -29,11 +38,12 @@ canvas{ position:fixed; top:0; left:0; }
   flex-direction:column;
   align-items:center;
   z-index:10;
+  width: 90%;
 }
 
-/* 蛋糕 */
+/* 蛋糕 - 手机字号适配 */
 #cake{
-  font-size:90px;
+  font-size:70px;
   margin-bottom:10px;
   animation:float 3s infinite ease-in-out;
 }
@@ -43,7 +53,7 @@ canvas{ position:fixed; top:0; left:0; }
   100%{transform:translateY(0)}
 }
 
-/* 蜡烛火焰 */
+/* 蜡烛火焰 - 手机尺寸优化 */
 #candle{
   position:relative;
   font-size:40px;
@@ -66,33 +76,62 @@ canvas{ position:fixed; top:0; left:0; }
   100%{transform:translateX(-50%) scale(1)}
 }
 
-h1{ font-size:36px; margin-bottom:10px; }
-.subtitle{ opacity:0.9; margin-bottom:20px; }
+/* 标题 - 手机字号优化 */
+h1{
+  font-size:28px;
+  margin-bottom:10px;
+  line-height:1.3;
+}
+.subtitle{
+  opacity:0.9;
+  margin-bottom:20px;
+  font-size:16px;
+}
 
+/* 按钮 - 手机点击友好 */
 button{
-  padding:16px 32px;
-  font-size:20px;
+  padding:14px 28px;
+  font-size:18px;
   border:none;
   border-radius:40px;
   background:white;
   color:#ff4d6d;
   box-shadow:0 8px 25px rgba(0,0,0,0.25);
+  min-width: 140px;
+  /* 手机点击高亮取消 */
+  -webkit-tap-highlight-color: transparent;
 }
-button:active{ transform:scale(0.9); }
+button:active{
+  transform:scale(0.9);
+}
 
+/* 文字区域 - 手机适配 */
 #message{
   margin-top:20px;
-  font-size:22px;
+  font-size:18px;
   line-height:1.7;
   min-height:120px;
   white-space:pre-line;
+  padding:0 10px;
 }
 
-/* 信封 */
+/* 手动吹蜡烛按钮 */
+#manualBlow{
+  margin-top:10px;
+}
+#manualBlow button{
+  padding:10px 20px;
+  font-size:16px;
+  background: #ff4d6d;
+  color:white;
+}
+
+/* 信封 - 手机尺寸优化 */
 #letter{
   position:absolute;
   bottom:-100%;
-  width:85%;
+  width: 75%;
+  max-width: 320px;
   background:white;
   color:#333;
   border-radius:20px;
@@ -100,28 +139,23 @@ button:active{ transform:scale(0.9); }
   font-size:18px;
   line-height:1.7;
   transition:1.2s;
+  box-sizing: border-box;
+  box-shadow:0 8px 30px rgba(0,0,0,0.3);
 }
 
-/* 烟花文字 */
+/* 烟花文字 - 手机适配 */
 #fireworks-text{
   position:absolute;
   top:30%;
   left:50%;
   transform:translateX(-50%);
-  font-size:48px;
+  font-size:36px;
   font-family:'ZCOOL KuaiLe', cursive;
   color:#ff4081;
   opacity:0;
   z-index:12;
   text-shadow:0 0 12px #fff,0 0 24px #ff4081;
-}
-
-/* 移动端提示 */
-#mobile-tip{
-  display:none;
-  color:#ff4081;
-  margin-top:10px;
-  font-size:18px;
+  white-space: nowrap;
 }
 </style>
 </head>
@@ -135,9 +169,12 @@ button:active{ transform:scale(0.9); }
   <div id="candle">🕯️<div class="flame" id="flame"></div></div>
   <h1>元子生日快乐</h1>
   <div class="subtitle">小心！有人准备一展烂歌喉</div>
-  <button id="play-btn">点一下播放生日歌 🎵</button>
+  <button onclick="start()">点一下</button>
   <div id="message"></div>
-  <div id="mobile-tip">⚠️ 手机静音或未允许播放，请打开音量</div>
+  <!-- 手动吹蜡烛按钮（默认隐藏） -->
+  <div id="manualBlow" style="display:none;">
+    <button onclick="blowCandle()">👉 手动吹蜡烛</button>
+  </div>
 </div>
 
 <div id="letter">
@@ -154,16 +191,34 @@ button:active{ transform:scale(0.9); }
 
 <div id="fireworks-text">生日快乐 元子</div>
 
-<audio id="song" preload="auto">
+<!-- 手机端音频优化 -->
+<audio id="song" preload="none" playsinline webkit-playsinline>
   <source src="song.mp3" type="audio/mpeg">
+  您的浏览器不支持音频元素。
 </audio>
 
 <script>
-// ===== 星空粒子 + 流星 =====
+// ===== 星空粒子 + 流星（手机优化：星星数量减少）=====
 const sky=document.getElementById("sky"), ctx=sky.getContext("2d");
-sky.width=window.innerWidth; sky.height=window.innerHeight;
+// 监听手机屏幕旋转
+function resizeCanvas() {
+  sky.width=window.innerWidth; 
+  sky.height=window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
 let stars=[], meteors=[];
-for(let i=0;i<200;i++){stars.push({x:Math.random()*sky.width, y:Math.random()*sky.height, r:Math.random()*1.5, a:Math.random()});}
+// 手机优化：星星数量从200→100
+for(let i=0;i<100;i++){
+  stars.push({
+    x:Math.random()*sky.width, 
+    y:Math.random()*sky.height, 
+    r:Math.random()*1.5, 
+    a:Math.random()
+  });
+}
+
 function drawStars(){
   ctx.clearRect(0,0,sky.width,sky.height);
   stars.forEach(s=>{
@@ -172,32 +227,66 @@ function drawStars(){
     ctx.fillStyle="rgba(255,255,255,"+s.a+")";
     ctx.fill();
     s.a+=Math.random()*0.05-0.02;
-    if(s.a<0)s.a=0; if(s.a>1)s.a=1;
+    if(s.a<0)s.a=0; 
+    if(s.a>1)s.a=1;
   });
+  
   meteors.forEach(m=>{
     ctx.beginPath();
-    ctx.moveTo(m.x,m.y); ctx.lineTo(m.x+m.dx, m.y+m.dy);
-    ctx.strokeStyle="rgba(255,255,255,"+m.a+")"; ctx.lineWidth=2; ctx.stroke();
-    m.x+=m.vx; m.y+=m.vy; m.a-=0.02;
+    ctx.moveTo(m.x,m.y); 
+    ctx.lineTo(m.x+m.dx, m.y+m.dy);
+    ctx.strokeStyle="rgba(255,255,255,"+m.a+")"; 
+    ctx.lineWidth=2; 
+    ctx.stroke();
+    m.x+=m.vx; 
+    m.y+=m.vy; 
+    m.a-=0.02;
   });
+  
   meteors=meteors.filter(m=>m.a>0);
   requestAnimationFrame(drawStars);
 }
 drawStars();
-function launchMeteor(){
-  meteors.push({x:Math.random()*sky.width,y:0,dx:Math.random()*80+50,dy:Math.random()*30+10,vx:4+Math.random()*2,vy:2+Math.random()*1,a:1});
-}
-setInterval(launchMeteor,2000);
 
-// ===== 烟花 =====
+function launchMeteor(){
+  meteors.push({
+    x:Math.random()*sky.width,
+    y:0,
+    dx:Math.random()*80+50,
+    dy:Math.random()*30+10,
+    vx:4+Math.random()*2,
+    vy:2+Math.random()*1,
+    a:1
+  });
+}
+// 手机优化：流星发射间隔稍长，减少卡顿
+setInterval(launchMeteor, 3000);
+
+// ===== 烟花（手机优化：粒子数量减少）=====
 const canvas=document.getElementById("fireworks"), c=canvas.getContext("2d");
-canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+canvas.width=window.innerWidth; 
+canvas.height=window.innerHeight;
+window.addEventListener('resize', ()=>{
+  canvas.width=window.innerWidth; 
+  canvas.height=window.innerHeight;
+});
+
 let particles=[];
+
+// 手机优化：烟花粒子从100→60
 function explode(x,y,color){
-  for(let i=0;i<100;i++){
-    particles.push({x:x,y:y,vx:(Math.random()-0.5)*6,vy:(Math.random()-0.5)*6,life:100,color:color});
+  for(let i=0;i<60;i++){
+    particles.push({
+      x:x,
+      y:y,
+      vx:(Math.random()-0.5)*6,
+      vy:(Math.random()-0.5)*6,
+      life:100,
+      color:color
+    });
   }
 }
+
 function drawFireworks(){
   c.clearRect(0,0,canvas.width,canvas.height);
   particles.forEach((p,i)=>{
@@ -205,7 +294,9 @@ function drawFireworks(){
     c.arc(p.x,p.y,2,0,Math.PI*2);
     c.fillStyle=p.color;
     c.fill();
-    p.x+=p.vx; p.y+=p.vy; p.life--;
+    p.x+=p.vx; 
+    p.y+=p.vy; 
+    p.life--;
   });
   particles=particles.filter(p=>p.life>0);
   requestAnimationFrame(drawFireworks);
@@ -219,31 +310,47 @@ function showFireworksText(){
   for(let i=0;i<txt.textContent.length;i++){
     explode(canvas.width/2,canvas.height/3,`hsl(${Math.random()*360},100%,70%)`);
   }
+  // 手机优化：烟花文字3秒后淡出
+  setTimeout(()=>{
+    txt.style.opacity=0;
+    txt.style.transition="opacity 1s";
+  }, 3000);
 }
 
 // ===== 主流程 =====
-const playBtn=document.getElementById("play-btn");
-const audio=document.getElementById("song");
+function start(){
+  // 隐藏按钮
+  document.querySelector("button").style.display="none";
 
-playBtn.addEventListener("click",()=>{
-  // 用户点击触发播放
-  const playPromise = audio.play();
-  if(playPromise !== undefined){
-    playPromise.then(()=>{
-      console.log("播放成功");
-      playBtn.style.display="none";
-      document.getElementById("mobile-tip").style.display="none";
-      typeText();
-      setInterval(()=>{explode(Math.random()*canvas.width,Math.random()*canvas.height/2,`hsl(${Math.random()*360},100%,70%)`)},800);
-      setTimeout(showFireworksText,4000);
-    }).catch(()=>{
-      // 手机可能静音
-      document.getElementById("mobile-tip").style.display="block";
+  // 播放音频（手机端兼容）
+  const song = document.getElementById('song');
+  // 先解锁音频上下文（手机必须）
+  if (song.paused) {
+    song.play().then(() => {
+      console.log('音频播放成功');
+    }).catch(e => {
+      console.error('音频播放失败:', e);
+      document.getElementById('message').innerText = '🎵 音频加载失败，手动播放song.mp3哦～';
     });
   }
-});
 
-// 打字动画
+  // 开始打字动画
+  typeText();
+  
+  // 手机优化：烟花发射间隔稍长
+  setInterval(()=>{
+    explode(
+      Math.random()*canvas.width,
+      Math.random()*canvas.height/2,
+      `hsl(${Math.random()*360},100%,70%)`
+    );
+  }, 1000);
+  
+  // 4秒后显示烟花文字
+  setTimeout(showFireworksText,4000);
+}
+
+// 打字动画（手机适配）
 let text="❤️愿卿此日生双翼\n质本洁来还洁去\n自由勇敢\n幸福做自己\n\n请吹灭蜡烛 🎂";
 let i=0;
 function typeText(){
@@ -251,11 +358,21 @@ function typeText(){
     document.getElementById("message").innerHTML+=text.charAt(i);
     i++;
     setTimeout(typeText,80);
-  } else { startMic(); }
+  } else { 
+    // 显示手动吹蜡烛按钮
+    document.getElementById("manualBlow").style.display = "block";
+    startMic(); 
+  }
 }
 
-// 麦克风吹蜡烛
+// 麦克风吹蜡烛（手机兼容优化）
 function startMic(){
+  // 先判断浏览器是否支持
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    console.log('手机浏览器不支持麦克风');
+    return;
+  }
+  
   navigator.mediaDevices.getUserMedia({audio:true})
   .then(stream=>{
     const audioContext=new AudioContext();
@@ -263,27 +380,50 @@ function startMic(){
     const analyser=audioContext.createAnalyser();
     mic.connect(analyser);
     let data=new Uint8Array(analyser.frequencyBinCount);
+    
     function detect(){
       analyser.getByteFrequencyData(data);
+      // 手机优化：降低音量阈值（更容易吹灭）
       let volume=data.reduce((a,b)=>a+b)/data.length;
-      if(volume>60){ blowCandle(); }
+      if(volume>40){ // 从60→40
+        blowCandle();
+      }
       requestAnimationFrame(detect);
     }
     detect();
-  }).catch(()=>{console.log("麦克风权限未允许");});
+  })
+  .catch(err => {
+    console.error('麦克风权限被拒绝或不可用:', err);
+    // 不提示错误，避免用户恐慌（有手动按钮兜底）
+  });
 }
 
 // 吹灭蜡烛
 function blowCandle(){
+  // 防止重复触发
+  if (document.getElementById("flame").style.display === "none") return;
+  
   document.getElementById("flame").style.display="none";
   document.getElementById("message").innerHTML+="\n\n愿望会实现的 ✨";
+  // 隐藏手动按钮
+  document.getElementById("manualBlow").style.display = "none";
   showLetter();
 }
 
 // 信封出现
 function showLetter(){
-  setTimeout(()=>{document.getElementById("letter").style.bottom="50px";},1500);
+  setTimeout(()=>{
+    document.getElementById("letter").style.bottom="20px"; // 手机优化：底部距离
+  },1500);
 }
+
+// 手机端点击空白处解锁音频（备用方案）
+document.body.addEventListener('click', ()=>{
+  const audioContext = window.audioContext || new (window.AudioContext || window.webkitAudioContext)();
+  if (audioContext.state === 'suspended') {
+    audioContext.resume();
+  }
+});
 </script>
 </body>
 </html>
