@@ -19,10 +19,12 @@ body{
   user-select: none;
 }
 
-canvas{
+/* 仅保留星空画布 */
+#skyCanvas{
   position:fixed;
   top:0;
   left:0;
+  z-index:1;
 }
 
 .container{
@@ -131,25 +133,16 @@ button:active{
   box-shadow:0 8px 30px rgba(0,0,0,0.3);
 }
 
+/* 移除烟花文字样式（保留文字，仅隐藏） */
 #fireworks-text{
-  position:absolute;
-  top:30%;
-  left:50%;
-  transform:translateX(-50%);
-  font-size:36px;
-  font-family:'ZCOOL KuaiLe', cursive;
-  color:#ff4081;
-  opacity:0;
-  z-index:12;
-  text-shadow:0 0 12px #fff,0 0 24px #ff4081;
-  white-space:nowrap;
+  display: none;
 }
 </style>
 </head>
 <body>
 
-<canvas id="sky"></canvas>
-<canvas id="fireworks"></canvas>
+<!-- 仅保留星空画布 -->
+<canvas id="skyCanvas"></canvas>
 
 <div class="container" id="main">
   <div id="cake">🎂</div>
@@ -175,11 +168,12 @@ button:active{
 ❤️
 </div>
 
+<!-- 烟花文字节点保留但隐藏 -->
 <div id="fireworks-text">生日快乐 元子</div>
 
 <audio id="song" loop>
   <source src="song.mp3" type="audio/mpeg">
-
+</audio>
 
 <script>
 // 全局音频（PC + 手机都能用）
@@ -192,132 +186,101 @@ document.addEventListener('click', function() {
   }
 }, { once: true });
 
-// 星空
-const sky = document.getElementById("sky");
-const ctx = sky.getContext("2d");
-function resizeSky() {
-  sky.width = window.innerWidth;
-  sky.height = window.innerHeight;
-}
-resizeSky();
-window.addEventListener('resize', resizeSky);
+// ========== 仅保留星空+流星效果（优化版） ==========
+const canvas = document.getElementById("skyCanvas");
+const ctx = canvas.getContext("2d");
 
-let stars = [], meteors = [];
-for (let i = 0; i < 100; i++) {
+// 适配屏幕
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// 星空参数（轻量化）
+const STAR_COUNT = 80;    // 星星数量
+const METEOR_INTERVAL = 5000; // 流星发射间隔
+
+// 数据结构
+let stars = [];
+let meteors = [];
+
+// 初始化星星
+for (let i = 0; i < STAR_COUNT; i++) {
   stars.push({
-    x: Math.random() * sky.width,
-    y: Math.random() * sky.height,
-    r: Math.random() * 1.5,
-    a: Math.random()
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    r: Math.random() * 1.2,
+    a: Math.random() * 0.8 + 0.2,
+    speed: Math.random() * 0.02 + 0.01
   });
 }
 
-function drawStars() {
-  ctx.clearRect(0, 0, sky.width, sky.height);
+// 发射流星
+function launchMeteor() {
+  meteors.push({
+    x: Math.random() * canvas.width,
+    y: 0,
+    dx: Math.random() * 60 + 30,
+    dy: Math.random() * 20 + 10,
+    vx: 3 + Math.random() * 1,
+    vy: 1.5 + Math.random() * 0.5,
+    a: 1
+  });
+}
+setInterval(launchMeteor, METEOR_INTERVAL);
+
+// 渲染星空+流星
+function render() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // 绘制星星
   stars.forEach(s => {
     ctx.beginPath();
     ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(255,255,255," + s.a + ")";
+    ctx.fillStyle = `rgba(255,255,255,${s.a})`;
     ctx.fill();
-    s.a += Math.random() * 0.05 - 0.02;
-    if (s.a < 0) s.a = 0;
-    if (s.a > 1) s.a = 1;
+    s.a += s.speed * (Math.random() > 0.5 ? 1 : -1);
+    s.a = Math.max(0.2, Math.min(0.8, s.a));
   });
+
+  // 绘制流星
   meteors.forEach(m => {
     ctx.beginPath();
     ctx.moveTo(m.x, m.y);
     ctx.lineTo(m.x + m.dx, m.y + m.dy);
-    ctx.strokeStyle = "rgba(255,255,255," + m.a + ")";
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = `rgba(255,255,255,${m.a})`;
+    ctx.lineWidth = 1.5;
     ctx.stroke();
     m.x += m.vx;
     m.y += m.vy;
-    m.a -= 0.02;
+    m.a -= 0.015;
   });
+
+  // 清理无效流星
   meteors = meteors.filter(m => m.a > 0);
-  requestAnimationFrame(drawStars);
+
+  requestAnimationFrame(render);
 }
-drawStars();
+render();
 
-function launchMeteor() {
-  meteors.push({
-    x: Math.random() * sky.width,
-    y: 0,
-    dx: Math.random() * 80 + 50,
-    dy: Math.random() * 30 + 10,
-    vx: 4 + Math.random() * 2,
-    vy: 2 + Math.random() * 1,
-    a: 1
-  });
-}
-setInterval(launchMeteor, 3000);
-
-// 烟花
-const canvas = document.getElementById("fireworks");
-const c = canvas.getContext("2d");
-function resizeFire() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-resizeFire();
-window.addEventListener('resize', resizeFire);
-
-let particles = [];
-
-function explode(x, y, color) {
-  for (let i = 0; i < 60; i++) {
-    particles.push({
-      x: x, y: y,
-      vx: (Math.random() - 0.5) * 6,
-      vy: (Math.random() - 0.5) * 6,
-      life: 100, color: color
-    });
-  }
-}
-
-function drawFireworks() {
-  c.clearRect(0, 0, canvas.width, canvas.height);
-  particles.forEach(p => {
-    ctx.beginPath();
-    c.arc(p.x, p.y, 2, 0, Math.PI * 2);
-    c.fillStyle = p.color;
-    c.fill();
-    p.x += p.vx;
-    p.y += p.vy;
-    p.life--;
-  });
-  particles = particles.filter(p => p.life > 0);
-  requestAnimationFrame(drawFireworks);
-}
-drawFireworks();
-
-function showFireworksText() {
-  const txt = document.getElementById("fireworks-text");
-  txt.style.opacity = 1;
-  for (let i = 0; i < 3; i++) {
-    explode(canvas.width / 2, canvas.height / 3, `hsl(${Math.random() * 360},100%,70%)`);
-  }
-  setTimeout(() => {
-    txt.style.opacity = 0;
-    txt.style.transition = "opacity 1s";
-  }, 3000);
-}
-
-// 主逻辑
+// ========== 主逻辑（移除所有烟花相关代码） ==========
 function start() {
   document.querySelector("button").style.display = "none";
 
-  // 统一播放：PC + 手机都正常
+  // 播放音频
   try { song.pause(); song.currentTime = 0; song.play(); } catch (e) {}
 
+  // 开始打字动画
   typeText();
-  setInterval(() => {
-    explode(Math.random() * canvas.width, Math.random() * canvas.height / 2, `hsl(${Math.random() * 360},100%,70%)`);
-  }, 1000);
-  setTimeout(showFireworksText, 4000);
+  
+  // 移除烟花定时发射逻辑
+  // 移除烟花文字显示逻辑
 }
 
-let text = "❤️愿卿此日生双翼\n质本洁来还洁去\n自由勇敢\n幸福做自己\n\n请吹灭蜡烛 🎂";
+// ========== 打字动画 ==========
+let text = "\n❤️愿卿此日生双翼\n质本洁来还洁去\n自由勇敢\n幸福做自己\n\n请吹灭蜡烛 🎂";
 let i = 0;
 function typeText() {
   if (i < text.length) {
@@ -330,6 +293,7 @@ function typeText() {
   }
 }
 
+// ========== 麦克风吹蜡烛 ==========
 function startMic() {
   if (!navigator.mediaDevices) return;
   navigator.mediaDevices.getUserMedia({ audio: true })
@@ -339,24 +303,32 @@ function startMic() {
     const an = ac.createAnalyser();
     mic.connect(an);
     const d = new Uint8Array(an.frequencyBinCount);
-    function detect() {
-      an.getByteFrequencyData(d);
-      const v = d.reduce((a, b) => a + b) / d.length;
-      if (v > 40) blowCandle();
+    
+    let lastCheck = 0;
+    function detect(timestamp) {
+      if (timestamp - lastCheck > 50) {
+        an.getByteFrequencyData(d);
+        const v = d.reduce((a, b) => a + b) / d.length;
+        if (v > 40) blowCandle();
+        lastCheck = timestamp;
+      }
       requestAnimationFrame(detect);
     }
-    detect();
+    detect(0);
   }).catch(() => {});
 }
 
+// ========== 吹灭蜡烛 ==========
 function blowCandle() {
   if (document.getElementById("flame").style.display === "none") return;
+  
   document.getElementById("flame").style.display = "none";
   document.getElementById("message").innerHTML += "\n\n愿望会实现的 ✨";
   document.getElementById("manualBlow").style.display = "none";
   showLetter();
 }
 
+// ========== 信封出现 ==========
 function showLetter() {
   setTimeout(() => {
     document.getElementById("letter").style.bottom = "20px";
