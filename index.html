@@ -12,39 +12,68 @@ body{
   margin:0;
   overflow:hidden;
   font-family:'ZCOOL KuaiLe', cursive;
-  /* 可爱生日背景：粉白渐变+蛋糕/星星纹理（静态无卡顿） */
-  background: linear-gradient(135deg, #ffebf0 0%, #ffe6f7 50%, #ffd6e7 100%) url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0ibm9uZSIvPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iODAiIGZpbGw9IiNmZmY5ZmYiIGZpbGwtb3BhY2l0eT0iMC4yIi8+PGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMTUiIGZpbGw9IiNmZmVlZmYiLz48Y2lyY2xlIGN4PSIxNjAiIGN5PSI0MCIgcj0iMTUiIGZpbGw9IiNmZmVlZmYiLz48Y2lyY2xlIGN4PSI0MCIgY3k9IjE2MCIgcj0iMTUiIGZpbGw9IiNmZmVlZmYiLz48Y2lyY2xlIGN4PSIxNjAiIGN5PSIxNjAiIHI9IjE1IiBmaWxsPSIjZmZlZWZmIi8+PHBhdGggZD0iTTgwIDEwMGgzMHYzMCIgZmlsbD0iI2ZmNzA5MCIvPjxwYXRoIGQ9Ik04MCAxNDVoMzB2LTMwIiBmaWxsPSIjZmY3MDkwIi8+PHBhdGggZD0iTTYwIDEyMGg4MCIgZmlsbD0iI2ZmNzA5MCIvPjxwYXRoIGQ9Ik0xMDAgODBoLTJ2LTJoMnYtMmgydjJoLTJ2MmgyIiBmaWxsPSIjZmY1MDcwIi8+PC9zdmc+') repeat;
-  color:#ff6b9d; /* 粉色文字更搭可爱风格 */
+  background:
+  radial-gradient(circle at top, #fff5f8 0%, #ffe4ef 45%, #ffd8e8 100%);
+  color:#ff6b9d;
   text-align:center;
-  -webkit-user-select: none;
-  user-select: none;
+  -webkit-user-select:none;
+  user-select:none;
+}
+
+/* 漂浮背景光点 */
+body::before{
+  content:"";
+  position:fixed;
+  width:200%;
+  height:200%;
+  background:
+    radial-gradient(circle, rgba(255,255,255,0.5) 2px, transparent 3px);
+  background-size:60px 60px;
+  animation:movebg 30s linear infinite;
+  opacity:.4;
+}
+
+@keyframes movebg{
+  from{transform:translate(0,0)}
+  to{transform:translate(-100px,-100px)}
 }
 
 .container{
   position:absolute;
   top:50%;
   left:50%;
-  transform:translate(-50%,-50%);
+  transform:translate(-50%,-50%) scale(.9);
   display:flex;
   flex-direction:column;
   align-items:center;
   z-index:10;
-  width:90%;
-  /* 加一层半透明背景，让文字更清晰 */
-  background: rgba(255,255,255,0.8);
-  padding: 20px;
-  border-radius: 20px;
-  box-shadow: 0 8px 30px rgba(255,107,157,0.2);
+  width:88%;
+  max-width:380px;
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(12px);
+  padding:24px;
+  border-radius:28px;
+  box-shadow:
+    0 12px 40px rgba(255,107,157,0.18),
+    inset 0 0 20px rgba(255,255,255,0.5);
+  animation:cardIn 1.2s ease forwards;
+}
+
+@keyframes cardIn{
+  to{
+    transform:translate(-50%,-50%) scale(1);
+  }
 }
 
 #cake{
-  font-size:80px;
+  font-size:82px;
   margin-bottom:10px;
   animation:float 3s infinite ease-in-out;
 }
+
 @keyframes float{
   0%{transform:translateY(0)}
-  50%{transform:translateY(-15px)}
+  50%{transform:translateY(-14px)}
   100%{transform:translateY(0)}
 }
 
@@ -53,21 +82,25 @@ body{
   font-size:50px;
   margin-bottom:20px;
 }
+
 .flame{
   width:16px;
   height:28px;
-  background:radial-gradient(circle,#ffec88 0%, #ffd066 100%);
+  background:radial-gradient(circle,#fff4a8 0%, #ffd066 60%, #ff9d3f 100%);
   border-radius:50%;
   position:absolute;
   left:50%;
   top:-30px;
   transform:translateX(-50%);
-  animation:flicker .15s infinite;
-  box-shadow: 0 0 10px rgba(255,208,102,0.8);
+  animation:flicker .12s infinite;
+  box-shadow:
+    0 0 12px rgba(255,208,102,.9),
+    0 0 25px rgba(255,180,80,.5);
 }
+
 @keyframes flicker{
   0%{transform:translateX(-50%) scale(1)}
-  50%{transform:translateX(-50%) scale(1.2)}
+  50%{transform:translateX(-50%) scale(1.22)}
   100%{transform:translateX(-50%) scale(1)}
 }
 
@@ -75,28 +108,28 @@ h1{
   font-size:32px;
   margin-bottom:10px;
   line-height:1.3;
-  text-shadow: 0 2px 4px rgba(255,107,157,0.3);
 }
+
 .subtitle{
-  opacity:0.9;
+  opacity:.9;
   margin-bottom:20px;
   font-size:18px;
 }
 
 button{
-  padding:14px 28px;
+  padding:15px 30px;
   font-size:18px;
   border:none;
   border-radius:40px;
-  background:#ff6b9d; /* 粉色按钮更搭 */
+  background:linear-gradient(135deg,#ff7ea6,#ff5e8f);
   color:white;
-  box-shadow:0 8px 25px rgba(255,107,157,0.3);
-  min-width:140px;
-  -webkit-tap-highlight-color:transparent;
+  box-shadow:0 10px 25px rgba(255,107,157,.3);
+  min-width:150px;
+  transition:.25s;
 }
+
 button:active{
-  transform:scale(0.9);
-  background:#ff5088;
+  transform:scale(.93);
 }
 
 #message{
@@ -105,44 +138,37 @@ button:active{
   line-height:1.7;
   min-height:120px;
   white-space:pre-line;
-  padding:0 10px;
-  text-shadow: 0 1px 2px rgba(255,255,255,0.8);
 }
 
 #manualBlow{
   margin-top:10px;
 }
+
 #manualBlow button{
   padding:10px 20px;
   font-size:16px;
-  background: #ff8cb3;
-  color:white;
 }
 
 #letter{
   position:absolute;
   bottom:-100%;
-  width:75%;
+  width:78%;
   max-width:320px;
   background:white;
   color:#ff6b9d;
-  border-radius:20px;
-  padding:25px;
+  border-radius:22px;
+  padding:24px;
   font-size:18px;
-  line-height:1.7;
-  transition:1.2s;
+  line-height:1.8;
+  transition:1.3s ease;
   box-sizing:border-box;
-  box-shadow:0 8px 30px rgba(255,107,157,0.2);
-}
-
-#fireworks-text{
-  display: none;
+  box-shadow:0 10px 35px rgba(255,107,157,.2);
 }
 </style>
 </head>
 <body>
 
-<div class="container" id="main">
+<div class="container">
   <div id="cake">🎂</div>
   <div id="candle">🕯️<div class="flame" id="flame"></div></div>
   <h1>元子生日快乐</h1>
@@ -166,93 +192,78 @@ button:active{
 ❤️
 </div>
 
-<div id="fireworks-text">生日快乐 元子</div>
-
-<audio id="song" loop>
-  <source src="song.mp3" type="audio/mpeg">
+<audio id="song" preload="auto" playsinline webkit-playsinline>
+<source src="song.mp3" type="audio/mpeg">
 </audio>
 
 <script>
-// 全局音频（PC + 手机都能用）
-const song = document.getElementById('song');
+const song=document.getElementById('song');
 
-// 手机音频解锁
-document.addEventListener('click', function() {
-  if (song.paused) {
-    song.play().catch(e => {});
-  }
-}, { once: true });
+function start(){
+  document.querySelector("button").style.display="none";
 
-// ========== 主逻辑 ==========
-function start() {
-  document.querySelector("button").style.display = "none";
-
-  // 播放音频
-  try { song.pause(); song.currentTime = 0; song.play(); } catch (e) {}
-
-  // 开始打字动画
-  typeText();
+  song.play().then(()=>{
+    typeText();
+  }).catch(()=>{
+    typeText();
+  });
 }
 
-// ========== 打字动画 ==========
-let text = "\n❤️愿卿此日生双翼\n质本洁来还洁去\n自由勇敢\n幸福做自己\n\n请吹灭蜡烛 🎂";
-let i = 0;
-function typeText() {
-  if (i < text.length) {
-    document.getElementById("message").innerHTML += text.charAt(i);
+let text="\n❤️愿卿此日生双翼\n质本洁来还洁去\n自由勇敢\n幸福做自己\n\n请吹灭蜡烛 🎂";
+let i=0;
+
+function typeText(){
+  if(i<text.length){
+    document.getElementById("message").innerHTML+=text.charAt(i);
     i++;
-    setTimeout(typeText, 80);
-  } else {
-    document.getElementById("manualBlow").style.display = "block";
+    setTimeout(typeText,80);
+  }else{
+    document.getElementById("manualBlow").style.display="block";
     startMic();
   }
 }
 
-// ========== 麦克风吹蜡烛（极简版） ==========
-function startMic() {
-  if (!navigator.mediaDevices) return;
-  
-  navigator.mediaDevices.getUserMedia({audio: true})
-  .then(stream => {
-    const ac = new AudioContext();
-    const mic = ac.createMediaStreamSource(stream);
-    const an = ac.createAnalyser();
+function startMic(){
+  if(!navigator.mediaDevices) return;
+
+  navigator.mediaDevices.getUserMedia({audio:true})
+  .then(stream=>{
+    const ac=new(window.AudioContext||window.webkitAudioContext)();
+    const mic=ac.createMediaStreamSource(stream);
+    const an=ac.createAnalyser();
     mic.connect(an);
-    an.fftSize = 32;
-    const d = new Uint8Array(an.frequencyBinCount);
-    
-    let lastCheck = 0;
-    function detect(timestamp) {
-      if (timestamp - lastCheck > 100) {
-        an.getByteFrequencyData(d);
-        const v = d.reduce((a, b) => a + b) / d.length;
-        if (v > 50) {
-          blowCandle();
-        }
-        lastCheck = timestamp;
+    an.fftSize=32;
+    const d=new Uint8Array(an.frequencyBinCount);
+
+    function detect(){
+      an.getByteFrequencyData(d);
+      const v=d.reduce((a,b)=>a+b)/d.length;
+      if(v>50){
+        blowCandle();
       }
       requestAnimationFrame(detect);
     }
-    detect(0);
-  }).catch(() => {});
+
+    detect();
+  });
 }
 
-// ========== 吹灭蜡烛 ==========
-function blowCandle() {
-  if (document.getElementById("flame").style.display === "none") return;
-  
-  document.getElementById("flame").style.display = "none";
-  document.getElementById("message").innerHTML += "\n\n愿望会实现的 ✨";
-  document.getElementById("manualBlow").style.display = "none";
+function blowCandle(){
+  if(document.getElementById("flame").style.display==="none") return;
+
+  document.getElementById("flame").style.display="none";
+  document.getElementById("message").innerHTML+="\n\n愿望会实现的 ✨";
+  document.getElementById("manualBlow").style.display="none";
+
   showLetter();
 }
 
-// ========== 信封出现 ==========
-function showLetter() {
-  setTimeout(() => {
-    document.getElementById("letter").style.bottom = "20px";
-  }, 1500);
+function showLetter(){
+  setTimeout(()=>{
+    document.getElementById("letter").style.bottom="30px";
+  },1500);
 }
 </script>
+
 </body>
 </html>
