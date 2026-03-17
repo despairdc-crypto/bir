@@ -2,9 +2,12 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
+<!-- 手机核心适配 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>生日快乐 元子</title>
+
 <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+
 <style>
 body{
   margin:0;
@@ -13,14 +16,16 @@ body{
   background:black;
   color:white;
   text-align:center;
-  -webkit-user-select:none;
-  user-select:none;
+  -webkit-user-select: none;
+  user-select: none;
 }
+
 canvas{
   position:fixed;
   top:0;
   left:0;
 }
+
 .container{
   position:absolute;
   top:50%;
@@ -30,8 +35,9 @@ canvas{
   flex-direction:column;
   align-items:center;
   z-index:10;
-  width:90%;
+  width: 90%;
 }
+
 #cake{
   font-size:70px;
   margin-bottom:10px;
@@ -42,6 +48,7 @@ canvas{
   50%{transform:translateY(-15px)}
   100%{transform:translateY(0)}
 }
+
 #candle{
   position:relative;
   font-size:40px;
@@ -63,6 +70,7 @@ canvas{
   50%{transform:translateX(-50%) scale(1.2)}
   100%{transform:translateX(-50%) scale(1)}
 }
+
 h1{
   font-size:28px;
   margin-bottom:10px;
@@ -73,6 +81,7 @@ h1{
   margin-bottom:20px;
   font-size:16px;
 }
+
 button{
   padding:14px 28px;
   font-size:18px;
@@ -81,12 +90,13 @@ button{
   background:white;
   color:#ff4d6d;
   box-shadow:0 8px 25px rgba(0,0,0,0.25);
-  min-width:140px;
-  -webkit-tap-highlight-color:transparent;
+  min-width: 140px;
+  -webkit-tap-highlight-color: transparent;
 }
 button:active{
   transform:scale(0.9);
 }
+
 #message{
   margin-top:20px;
   font-size:18px;
@@ -95,20 +105,22 @@ button:active{
   white-space:pre-line;
   padding:0 10px;
 }
+
 #manualBlow{
   margin-top:10px;
 }
 #manualBlow button{
   padding:10px 20px;
   font-size:16px;
-  background:#ff4d6d;
+  background: #ff4d6d;
   color:white;
 }
+
 #letter{
   position:absolute;
   bottom:-100%;
-  width:75%;
-  max-width:320px;
+  width: 75%;
+  max-width: 320px;
   background:white;
   color:#333;
   border-radius:20px;
@@ -116,9 +128,10 @@ button:active{
   font-size:18px;
   line-height:1.7;
   transition:1.2s;
-  box-sizing:border-box;
+  box-sizing: border-box;
   box-shadow:0 8px 30px rgba(0,0,0,0.3);
 }
+
 #fireworks-text{
   position:absolute;
   top:30%;
@@ -130,7 +143,18 @@ button:active{
   opacity:0;
   z-index:12;
   text-shadow:0 0 12px #fff,0 0 24px #ff4081;
-  white-space:nowrap;
+  white-space: nowrap;
+}
+
+/* 音频提示（可选） */
+#audioTip{
+  position:absolute;
+  top:20px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:14px;
+  color:#ccc;
+  display:none;
 }
 </style>
 </head>
@@ -164,188 +188,270 @@ button:active{
 </div>
 
 <div id="fireworks-text">生日快乐 元子</div>
+<div id="audioTip">正在播放音乐...</div>
 
-<audio id="song" loop>
+<!-- 手机音频终极兼容 -->
+<audio id="song" loop controls style="display:none;">
+  <source src="song.mp3" type="audio/mpeg">
+</audio>
 
 <script>
-// 手机100%出声专用（在线音频，不用传mp3）
-const song = document.getElementById('song');
-song.src = 'https://cdn.jsdelivr.net/gh/fox64/static/birthday.mp3';
+// ========== 手机音频强制解锁（核心修复） ==========
+let audioContext;
+let isAudioUnlocked = false;
 
-// 全局解锁手机音频（最关键）
-let audioUnlocked = false;
-document.body.addEventListener('click', () => {
-  if (!audioUnlocked) {
-    audioUnlocked = true;
-    song.load();
+// 第一步：页面加载就初始化音频上下文
+function initAudioContext() {
+  try {
+    window.AudioContext = window.AudioContext || window.webkitAudioContext;
+    audioContext = new AudioContext();
+  } catch (e) {
+    console.log("音频上下文初始化成功");
   }
-}, true);
-
-// 星空
-const sky = document.getElementById("sky");
-const ctx = sky.getContext("2d");
-function resize() {
-  sky.width = window.innerWidth;
-  sky.height = window.innerHeight;
 }
-resize();
-window.addEventListener('resize', resize);
+initAudioContext();
 
-let stars = [], meteors = [];
-for (let i = 0; i < 100; i++) {
+// 第二步：点击任意位置解锁音频（手机必做）
+document.body.addEventListener('click', function unlockAudio() {
+  if (isAudioUnlocked) return;
+  
+  // 强制解锁音频上下文
+  if (audioContext && audioContext.state === 'suspended') {
+    audioContext.resume();
+  }
+  
+  // 预加载音频
+  const song = document.getElementById('song');
+  song.load();
+  
+  isAudioUnlocked = true;
+  document.body.removeEventListener('click', unlockAudio);
+}, { once: true });
+
+// ========== 星空 + 流星（手机优化） ==========
+const sky=document.getElementById("sky"), ctx=sky.getContext("2d");
+function resizeCanvas() {
+  sky.width=window.innerWidth; 
+  sky.height=window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+let stars=[], meteors=[];
+for(let i=0;i<100;i++){
   stars.push({
-    x: Math.random() * sky.width,
-    y: Math.random() * sky.height,
-    r: Math.random() * 1.5,
-    a: Math.random()
+    x:Math.random()*sky.width, 
+    y:Math.random()*sky.height, 
+    r:Math.random()*1.5, 
+    a:Math.random()
   });
 }
 
-function drawStars() {
-  ctx.clearRect(0, 0, sky.width, sky.height);
-  stars.forEach(s => {
+function drawStars(){
+  ctx.clearRect(0,0,sky.width,sky.height);
+  stars.forEach(s=>{
     ctx.beginPath();
-    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(255,255,255," + s.a + ")";
+    ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx.fillStyle="rgba(255,255,255,"+s.a+")";
     ctx.fill();
-    s.a += Math.random() * 0.05 - 0.02;
-    if (s.a < 0) s.a = 0;
-    if (s.a > 1) s.a = 1;
+    s.a+=Math.random()*0.05-0.02;
+    if(s.a<0)s.a=0; 
+    if(s.a>1)s.a=1;
   });
-  meteors.forEach(m => {
+  
+  meteors.forEach(m=>{
     ctx.beginPath();
-    ctx.moveTo(m.x, m.y);
-    ctx.lineTo(m.x + m.dx, m.y + m.dy);
-    ctx.strokeStyle = "rgba(255,255,255," + m.a + ")";
-    ctx.lineWidth = 2;
+    ctx.moveTo(m.x,m.y); 
+    ctx.lineTo(m.x+m.dx, m.y+m.dy);
+    ctx.strokeStyle="rgba(255,255,255,"+m.a+")"; 
+    ctx.lineWidth=2; 
     ctx.stroke();
-    m.x += m.vx;
-    m.y += m.vy;
-    m.a -= 0.02;
+    m.x+=m.vx; 
+    m.y+=m.vy; 
+    m.a-=0.02;
   });
-  meteors = meteors.filter(m => m.a > 0);
+  
+  meteors=meteors.filter(m=>m.a>0);
   requestAnimationFrame(drawStars);
 }
 drawStars();
 
-function launchMeteor() {
+function launchMeteor(){
   meteors.push({
-    x: Math.random() * sky.width,
-    y: 0,
-    dx: Math.random() * 80 + 50,
-    dy: Math.random() * 30 + 10,
-    vx: 4 + Math.random() * 2,
-    vy: 2 + Math.random() * 1,
-    a: 1
+    x:Math.random()*sky.width,
+    y:0,
+    dx:Math.random()*80+50,
+    dy:Math.random()*30+10,
+    vx:4+Math.random()*2,
+    vy:2+Math.random()*1,
+    a:1
   });
 }
 setInterval(launchMeteor, 3000);
 
-// 烟花
-const canvas = document.getElementById("fireworks");
-const c = canvas.getContext("2d");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-window.addEventListener('resize', () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+// ========== 烟花（手机优化） ==========
+const canvas=document.getElementById("fireworks"), c=canvas.getContext("2d");
+canvas.width=window.innerWidth; 
+canvas.height=window.innerHeight;
+window.addEventListener('resize', ()=>{
+  canvas.width=window.innerWidth; 
+  canvas.height=window.innerHeight;
 });
-let particles = [];
 
-function explode(x, y, color) {
-  for (let i = 0; i < 60; i++) {
+let particles=[];
+
+function explode(x,y,color){
+  for(let i=0;i<60;i++){
     particles.push({
-      x: x, y: y,
-      vx: (Math.random() - 0.5) * 6,
-      vy: (Math.random() - 0.5) * 6,
-      life: 100, color: color
+      x:x,
+      y:y,
+      vx:(Math.random()-0.5)*6,
+      vy:(Math.random()-0.5)*6,
+      life:100,
+      color:color
     });
   }
 }
 
-function drawFireworks() {
-  c.clearRect(0, 0, canvas.width, canvas.height);
-  particles.forEach(p => {
+function drawFireworks(){
+  c.clearRect(0,0,canvas.width,canvas.height);
+  particles.forEach((p,i)=>{
     c.beginPath();
-    c.arc(p.x, p.y, 2, 0, Math.PI * 2);
-    c.fillStyle = p.color;
+    c.arc(p.x,p.y,2,0,Math.PI*2);
+    c.fillStyle=p.color;
     c.fill();
-    p.x += p.vx;
-    p.y += p.vy;
+    p.x+=p.vx; 
+    p.y+=p.vy; 
     p.life--;
   });
-  particles = particles.filter(p => p.life > 0);
+  particles=particles.filter(p=>p.life>0);
   requestAnimationFrame(drawFireworks);
 }
 drawFireworks();
 
-function showFireworksText() {
-  const txt = document.getElementById("fireworks-text");
-  txt.style.opacity = 1;
-  for (let i = 0; i < 3; i++) {
-    explode(canvas.width / 2, canvas.height / 3, `hsl(${Math.random() * 360},100%,70%)`);
+// ========== 烟花文字 ==========
+function showFireworksText(){
+  const txt=document.getElementById("fireworks-text");
+  txt.style.opacity=1;
+  for(let i=0;i<txt.textContent.length;i++){
+    explode(canvas.width/2,canvas.height/3,`hsl(${Math.random()*360},100%,70%)`);
   }
-  setTimeout(() => {
-    txt.style.opacity = 0;
-    txt.style.transition = "opacity 1s";
+  setTimeout(()=>{
+    txt.style.opacity=0;
+    txt.style.transition="opacity 1s";
   }, 3000);
 }
 
-// 主逻辑
-function start() {
-  document.querySelector("button").style.display = "none";
-  song.play().catch(e => console.log(e));
+// ========== 主流程（音频终极修复） ==========
+function start(){
+  // 隐藏按钮
+  document.querySelector("button").style.display="none";
+  document.getElementById("audioTip").style.display="block";
+
+  // 手机音频播放终极方案
+  const song = document.getElementById('song');
+  
+  // 强制播放（无视大部分手机限制）
+  async function playAudio() {
+    try {
+      // 先暂停再播放，避免缓存问题
+      song.pause();
+      song.currentTime = 0;
+      
+      // 多次尝试播放
+      const playPromise = song.play();
+      if (playPromise !== undefined) {
+        await playPromise;
+        console.log("音频播放成功！");
+      }
+    } catch (error) {
+      console.log("自动播放失败，尝试备用方案");
+      // 备用方案：显示音频控件让用户手动点
+      song.style.display = "block";
+      song.style.position = "fixed";
+      song.style.bottom = "10px";
+      song.style.left = "50%";
+      song.style.transform = "translateX(-50%)";
+      document.getElementById("message").innerText = "🎵 点击下方播放按钮听生日歌～";
+    }
+  }
+  playAudio();
+
+  // 开始打字动画
   typeText();
-  setInterval(() => {
-    explode(Math.random() * canvas.width, Math.random() * canvas.height / 2, `hsl(${Math.random() * 360},100%,70%)`);
+  
+  // 发射烟花
+  setInterval(()=>{
+    explode(
+      Math.random()*canvas.width,
+      Math.random()*canvas.height/2,
+      `hsl(${Math.random()*360},100%,70%)`
+    );
   }, 1000);
-  setTimeout(showFireworksText, 4000);
+  
+  // 4秒后显示烟花文字
+  setTimeout(showFireworksText,4000);
 }
 
-let text = "❤️愿卿此日生双翼\n质本洁来还洁去\n自由勇敢\n幸福做自己\n\n请吹灭蜡烛 🎂";
-let i = 0;
-function typeText() {
-  if (i < text.length) {
-    document.getElementById("message").innerHTML += text.charAt(i);
+// ========== 打字动画 ==========
+let text="❤️愿卿此日生双翼\n质本洁来还洁去\n自由勇敢\n幸福做自己\n\n请吹灭蜡烛 🎂";
+let i=0;
+function typeText(){
+  if(i<text.length){
+    document.getElementById("message").innerHTML+=text.charAt(i);
     i++;
-    setTimeout(typeText, 80);
-  } else {
+    setTimeout(typeText,80);
+  } else { 
+    // 显示手动吹蜡烛按钮
     document.getElementById("manualBlow").style.display = "block";
-    startMic();
+    startMic(); 
   }
 }
 
-function startMic() {
-  if (!navigator.mediaDevices) return;
-  navigator.mediaDevices.getUserMedia({ audio: true })
-    .then(stream => {
-      const ac = new AudioContext();
-      const mic = ac.createMediaStreamSource(stream);
-      const an = ac.createAnalyser();
-      mic.connect(an);
-      const d = new Uint8Array(an.frequencyBinCount);
-      function f() {
-        an.getByteFrequencyData(d);
-        const v = d.reduce((a, b) => a + b) / d.length;
-        if (v > 40) blowCandle();
-        requestAnimationFrame(f);
+// ========== 麦克风吹蜡烛 ==========
+function startMic(){
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    return;
+  }
+  
+  navigator.mediaDevices.getUserMedia({audio:true})
+  .then(stream=>{
+    const audioContext=new AudioContext();
+    const mic=audioContext.createMediaStreamSource(stream);
+    const analyser=audioContext.createAnalyser();
+    mic.connect(analyser);
+    let data=new Uint8Array(analyser.frequencyBinCount);
+    
+    function detect(){
+      analyser.getByteFrequencyData(data);
+      let volume=data.reduce((a,b)=>a+b)/data.length;
+      if(volume>40){
+        blowCandle();
       }
-      f();
-    }).catch(() => {});
+      requestAnimationFrame(detect);
+    }
+    detect();
+  })
+  .catch(err => {
+    console.log("麦克风不可用，使用手动按钮");
+  });
 }
 
-function blowCandle() {
+// ========== 吹灭蜡烛 ==========
+function blowCandle(){
   if (document.getElementById("flame").style.display === "none") return;
-  document.getElementById("flame").style.display = "none";
-  document.getElementById("message").innerHTML += "\n\n愿望会实现的 ✨";
+  
+  document.getElementById("flame").style.display="none";
+  document.getElementById("message").innerHTML+="\n\n愿望会实现的 ✨";
   document.getElementById("manualBlow").style.display = "none";
   showLetter();
 }
 
-function showLetter() {
-  setTimeout(() => {
-    document.getElementById("letter").style.bottom = "20px";
-  }, 1500);
+// ========== 信封出现 ==========
+function showLetter(){
+  setTimeout(()=>{
+    document.getElementById("letter").style.bottom="20px";
+  },1500);
 }
 </script>
 </body>
